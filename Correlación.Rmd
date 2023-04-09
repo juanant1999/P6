@@ -1,0 +1,233 @@
+---
+title: "Práctica 6"
+author: "Juan Antonio Fernández Morales"
+date: "2023-03-29"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### 1. Instale y cargue las siguientes librerías: "MASS", "caret", "stat", "olsrr", "kable", "kableExtra", "knitr" y "rmarkdown".
+
+``` {library(mass)}
+install.packages("caret")
+library(caret)
+install.packages("stat")
+library(stat)
+install.packages("olsrr")
+library(olsrr)
+install.packages("kable")
+library(kable)
+install.packages("kableExtra")
+library(kableExtra)
+library(knitr)
+library(rmarkdown)
+```
+
+#### 2.Cree 2 variables almacenadas como vector: "y_cuentas" y "x_distancia" a partir de los siguientes valores numéricos: -Cuentas: "110,2,6,98,40,94,31,5,8,10" -Distancia: "1.1,100.2,90.3,5.4,57.5,6.6,34.7,65.8,57.9,86.1"
+
+```{r pressure, echo=FALSE}
+y_cuentas <- c(110, 2, 6, 98, 40, 94, 31, 5, 8, 10)
+x_distancia <- c(1.1, 100.2, 90.3, 5.4, 57.5, 6.6, 34.7, 65.8, 57.9, 86.1)
+```
+
+#### 3. Verifique el supuesto de linealidad de la variable explicativa incluyendo un contraste de hipótesis.
+
+```{r pressure, echo=FALSE}
+cor.test(y_cuentas, x_distancia)
+
+```
+p-value es 0.00012, por lo que es menor a 0.05. Esto significa que la correlación es significativa y hay relación lineal entre las dos variables
+
+#### 4. Verifique el supuesto de normalidad de la variable explicativa mediante su visualización en un histograma y un test de normalidad.
+
+```{r pressure, echo=FALSE}
+shapiro.test(x_distancia)
+
+```
+p-value es mayo que 0.05, por lo que el resultado es no significativo y la variable explicativa es normal
+
+#### 5. Multiplique las variable de respuesta por la variable explicativa. Llama al objeto "xy".
+
+```{r pressure, echo=FALSE}
+xy <- y_cuentas * x_distancia
+xy
+```
+
+#### 6. Eleve al cuadrado la variable explicativa. Llama al objeto "x_cuadrado".
+
+```{r pressure, echo=FALSE}
+x_cuadrado <- x_distancia^2
+```
+
+#### 7. A continuación, almacena las variables: "y_cuentas", "x_distancia", "xy" y "x_cuadrado" en un data frame llamado "tabla_datos".
+
+```{r pressure, echo=FALSE}
+tabla_datos <- data.frame(y_cuentas = y_cuentas, 
+                          x_distancia = x_distancia, 
+                          xy = xy, 
+                          x_cuadrado = x_cuadrado)
+```
+
+#### 8. Visualice el objeto "tabla_datos" en una tabla en la consola a través de alguna de las funciones ofrecidas por la librería "kableExtra".
+
+```{r pressure, echo=FALSE}
+kable(tabla_datos)
+```
+
+#### 9. Realice el sumatorio de los valores almacenados en las 4 columnas del data frame "tabla_datos"
+
+```{r pressure, echo=FALSE}
+suma_tabla_datos <- sum(tabla_datos$y_cuentas) + 
+  sum(tabla_datos$x_distancia) + 
+  sum(tabla_datos$xy) + 
+  sum(tabla_datos$x_cuadrado)
+print(suma_tabla_datos)
+```
+
+#### 10. Añada el sumatorio de las 4 columnas como un último registro en el data frame "tabla_datos" de modo que tengamos en un solo objeto los valores junto con el sumatorio.
+
+```{r pressure, echo=FALSE}
+library(dplyr)
+
+# Calcular la suma de cada columna y guardar en un vector
+sumas <- c(sum(tabla_datos$y_cuentas), 
+           sum(tabla_datos$x_distancia), 
+           sum(tabla_datos$xy), 
+           sum(tabla_datos$x_cuadrado), 
+           sum(tabla_datos))
+sumas
+
+tabla_datos<-cbind(tabla_datos,sumas)
+tabla_datos
+
+```
+
+#### 11. Calcule la recta de regresión por el método de mínimos cuadrados (ordinario) a través de los datos incluidos en el data frame "tabla_datos".
+
+```{r pressure, echo=FALSE}
+modelo_regresion <- lm(y_cuentas ~ x_distancia, data = tabla_datos)
+
+# Imprimir los coeficientes del modelo
+print(modelo_regresion$coefficients)
+
+```
+
+#### 12. Visualice en un gráfico de dispersión la recta de regresión, nube de puntos. Indique en el título la ecuación resultante y edite los nombre de los ejes.
+
+```{r pressure, echo=FALSE}
+library(ggplot2)
+
+
+ggplot(tabla_datos, aes(x_distancia, y_cuentas)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red", formula = y ~ x) +
+  labs(title = "Recta de Regresión", x = "Distancia", y = "Cuentas") +
+  annotate("text", x = 20, y = 80, label = paste0("y = ", round(coef(modelo_regresion)[1], 2), 
+                                                  " + ", 
+                                                  round(coef(modelo_regresion)[2], 2), "x"))
+
+```
+
+#### 13. Calcule los residuos, residuos estandarizados y residuos estudentizados del modelo recién ajustado.
+
+```{r pressure, echo=FALSE}
+residuos <- residuals(modelo_regresion)
+
+#residuos estandarizados
+residuos_estandarizados <- rstandard(modelo_regresion)
+residuos_estandarizados
+
+#residuos estudentizados
+residuos_estudentizados <- rstudent(modelo_regresion)
+residuos_estudentizados
+```
+
+#### 14. Calcula el pronóstico o estimación del modelo para una observación que registra una distancia de 6.6km con respecto a la mina.
+
+```{r pressure, echo=FALSE}
+distancia <- 6.6
+
+# Calculando el pronóstico
+pronostico <- predict(modelo_regresion, data.frame(x_distancia = distancia))
+pronostico
+```
+
+#### 15. Genera dos conjuntos aleatorios de datos: "entrenamiento" y "validación".
+
+```{r pressure, echo=FALSE}
+data<- data.frame(y_cuentas,x_distancia)
+train_sample <- data %>%
+createDataPartition(p=8, list=FALSE)
+entrenamiento
+entrenamiento <- data[-train_sample,]
+test<-data[train_sample,]
+train_sample
+test
+
+```
+
+#### 16. Ajusta nuevamente el modelo con el conjunto de "entrenamiento".
+
+```{r pressure, echo=FALSE}
+library(stats)
+modelo1<- lm(y_cuentas ~ x_distancia, entrenamiento )
+summary(modelo1)
+
+plot(modelo1)
+```
+
+Se muestra un patron de errores en todas las gráficas. No es homocedastico, no tiene una media 0 , ni una forma de campana
+
+#### 17. Interprete el valor asociado a los coeficientes de regresión y a R2. ¿Qué significan los asteriscos inmediatamente a la derecha de los valores arrojados tras ajustar el modelo?
+
+El valor asociado a los coeficientes de regresión indica el cambio promedio en la variable de respuesta y correspondiente a un cambio de una unidad en la variable explicativa x. El valor de R\^2, por su parte, mide la proporción de la variabilidad total en la variable de respuesta que es explicada por el modelo. Los asteriscos indican el nivel de significancia estadística del coeficiente correspondiente.
+
+#### 18.¿Cómo se ha realizado el cálculo para los grados de libertad del modelo?
+
+Los grados de libertad del modelo se calculan como el número de variables independientes (predictoras) que se están utilizando en el modelo. En el caso de una regresión lineal simple, que es el tipo de modelo utilizado en este ejemplo, hay una sola variable predictora, por lo que el modelo tiene un grado de libertad. En general, si hay "p" variables predictivas en un modelo de regresión lineal múltiple, el número de grados de libertad del modelo es "p".
+
+#### 19. Especifique el total de varianza explicada y no explicada por el modelo.
+
+El total de varianza en los datos se puede descomponer en dos componentes: la varianza explicada por el modelo (suma de cuadrados de la regresión) y la varianza no explicada (suma de cuadrados residual).
+
+#### 20. Aplique la validación cruzada simple para evaluar la robustez y capacidad predictiva del modelo.
+
+```{r pressure, echo=FALSE}
+library(boot)
+set.seed(123)
+
+modelo <- glm(y_cuentas ~ x_distancia, data = entrenamiento)
+
+#validación cruzada simple
+cv_modelo <- cv.glm(data = entrenamiento, glmfit = modelo, K = 4)
+
+
+summary(cv_modelo)
+```
+
+#### 21.Verifique que no existen observaciones influyentes.
+
+```{r pressure, echo=FALSE}
+
+```
+
+#### 22.Verifique el supuesto de independencia de los residuos.
+
+```{r pressure, echo=FALSE}
+  library(car)
+  durbinWatsonTest(modelo)
+```
+
+La prueba de Durbin-Watson evalúa la presencia de autocorrelación en los residuos, donde un valor cercano a 2 indica independencia, mientras que valores más bajos o más altos pueden indicar autocorrelación positiva o negativa, respectivamente. En este caso, el resultado no se acerca a 2, por lo que indicaría autocorrelación. Este modelo no contendría residuos
+
+#### 23.Confirme que los errores del modelo permanecen constantes para todo el rango de estimaciones.
+
+```{r pressure, echo=FALSE}
+
+```
